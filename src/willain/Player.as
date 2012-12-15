@@ -2,6 +2,8 @@ package willain
 {
 	import org.flixel.FlxObject;
 	import org.flixel.FlxSprite;
+	import org.flixel.FlxG;
+	import org.flixel.FlxPoint;
 	
 	/**
 	 * ...
@@ -10,6 +12,8 @@ package willain
 	public class Player extends FlxSprite 
 	{
 		public var fireRate:Number = 0.5;
+		public var onLadder:Boolean = false;
+		public var invisible:Boolean = false;
 		
 		public function Player(x:Number, y:Number, graphic:Class = null) : void
 		{
@@ -28,6 +32,11 @@ package willain
 		override public function update() : void 
 		{
 			super.update();
+		}
+		
+		public function setInvisibility(value:Boolean) : void
+		{
+			invisible = value;
 		}
 	}
 

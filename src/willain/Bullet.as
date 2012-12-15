@@ -10,13 +10,15 @@ package willain
 	{
 		public var enemy:Boolean = false;
 		public var damage:Number = 10;
+		public var lethal:Boolean = true;
 		
-		public function Bullet(x:Number, y:Number) 
+		public function Bullet(x:Number, y:Number, lethal:Boolean = true) 
 		{
 			super(x, y);
 			
 			makeGraphic(6, 3, 0xFFFF0011);
 			
+			lethal = lethal;
 			maxVelocity.x = 150;
 			maxVelocity.y = 10;
 			acceleration.y = 0;
