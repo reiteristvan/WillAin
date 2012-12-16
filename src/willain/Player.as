@@ -14,6 +14,7 @@ package willain
 		public var fireRate:Number = 0.5;
 		public var onLadder:Boolean = false;
 		public var invisible:Boolean = false;
+		public var invisibilityTimer:Number = 5;
 		
 		public function Player(x:Number, y:Number, graphic:Class = null) : void
 		{
@@ -36,6 +37,7 @@ package willain
 		
 		public function setInvisibility(value:Boolean) : void
 		{
+			makeGraphic(32, 32, 0xFF111111);
 			invisible = value;
 		}
 	}

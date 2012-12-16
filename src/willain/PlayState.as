@@ -4,6 +4,7 @@ package willain
 	import org.flixel.FlxG;
 	import org.flixel.FlxGroup;
 	import org.flixel.FlxObject;
+	import org.flixel.FlxPath;
 	import org.flixel.FlxPoint;
 	import org.flixel.FlxState;
 	import org.flixel.FlxTilemap;
@@ -23,7 +24,7 @@ package willain
 		private var ladders:FlxGroup;
 		
 		private var fireRateCounter:Number = 0;
-		private var lethalBullet:Boolean = true;
+		private var lethalBullet:Boolean = false;
 		
 		public function PlayState() : void
 		{
@@ -36,6 +37,9 @@ package willain
 			ladders = new FlxGroup();
 			
 			level.loadMap(FlxTilemap.arrayToCSV(Global.DummyLevel, 40), Global.TileGraphic, 32, 32);
+			
+			var e:Enemy = new Enemy(6 * 32, 10 * 32);
+			enemies.add(e);
 			
 			add(level);
 			add(enemies);
@@ -58,7 +62,22 @@ package willain
 		
 		override public function update():void 
 		{
-			fireRateCounter += FlxG.elapsed;
+			if(fireRateCounter <= player.fireRate)
+				fireRateCounter += FlxG.elapsed;
+			
+			if (player.invisible)
+			{
+				player.invisibilityTimer -= FlxG.elapsed;
+				
+				if (player.invisibilityTimer <= 0)
+					player.setInvisibility(false);
+			}
+			else
+			{
+				if (player.invisibilityTimer <= 5)
+					player.invisibilityTimer += FlxG.elapsed;
+			}
+			
 			player.acceleration.x = 0;
 			
 			if (player.onLadder)
@@ -103,7 +122,7 @@ package willain
 			// shoot
 			if (FlxG.keys.X && fireRateCounter >= player.fireRate)
 			{
-				shoot(false, new FlxPoint(player.x + 32, player.y + 16), player.facing);
+				shoot(false, new FlxPoint(player.x + 48, player.y + 16), player.facing);
 				fireRateCounter = 0;
 			}
 			
@@ -125,8 +144,8 @@ package willain
 			
 			player.onLadder = FlxG.overlap(ladders, player);
 			
-			FlxG.collide(bullets, player, bulletCollision);
-			FlxG.collide(bullets, enemies, bulletCollision);
+			FlxG.overlap(bullets, player, bulletCollision);
+			FlxG.overlap(bullets, enemies, bulletCollision);
 			FlxG.collide(bullets, level, bulletCollision);
 			FlxG.collide(items, player, itemCollision);
 		}
@@ -140,7 +159,7 @@ package willain
 			if (direction == FlxObject.LEFT)
 			{
 				bullet.acceleration.x *= -1;
-				bullet.x -= 16;
+				bullet.x -= 24;
 			}
 			
 			bullets.add(bullet);
@@ -149,7 +168,9 @@ package willain
 		private function updateEnemies(item:*, index:int, array:Array) : void
 		{
 			var enemy:Enemy = item as Enemy;
+			enemy.acceleration.x = 0;
 			
+			// handle paralizing
 			if (enemy.paralized)
 			{
 				enemy.paralizeTimer -= FlxG.elapsed;
@@ -157,9 +178,41 @@ package willain
 				if (enemy.paralizeTimer <= 0)
 				{
 					enemy.setParalize(false);
-					enemy.paralizeTimer = 15;
 				}
+				
+				return;
 			}
+			
+			if (enemy.fireRateCounter <= enemy.fireRate)
+				enemy.fireRateCounter += FlxG.elapsed;
+			
+			// player is line of sigth
+			if (!player.invisible && (player.y == enemy.y) && (Math.abs(player.x - enemy.x) < 64))
+			{
+				if (player.x < enemy.x)
+					enemy.facing = FlxObject.LEFT;
+				else
+					enemy.facing = FlxObject.RIGHT;
+				
+				if (enemy.fireRateCounter >= enemy.fireRate)
+				{
+					shoot(true, new FlxPoint(enemy.x + 48, enemy.y + 16), enemy.facing);
+					enemy.fireRateCounter = 0;
+				}
+					
+				return;
+			}
+			
+			// patrol
+			if (enemy.x > enemy.startPosition.x + enemy.range)
+				enemy.facing = FlxObject.LEFT;
+			else if (enemy.x < enemy.startPosition.x - enemy.range)
+				enemy.facing = FlxObject.RIGHT;
+			
+			if (enemy.facing == FlxObject.LEFT)
+				enemy.acceleration.x = -enemy.maxVelocity.x * 4;
+			else
+				enemy.acceleration.x = enemy.maxVelocity.x * 4;
 		}
 		
 		private function playerNearLadder(a:FlxObject, b:FlxObject) : void
@@ -172,6 +225,7 @@ package willain
 			if (b is FlxTilemap)
 			{
 				a.kill();
+				bullets.remove(a, true);
 				return;
 			}
 			
@@ -181,20 +235,22 @@ package willain
 			{
 				player.hurt(bullet.damage);
 			}
-			else
+			else if(b is Enemy)
 			{
 				if (bullet.lethal)
 				{
-					b.hurt(bullet.damage);
+					b.kill();
+					enemies.remove(b, true);
 				}
 				else
 				{
 					var e:Enemy = b as Enemy;
 					e.setParalize(true);
 				}
-				
-				bullet.kill();
 			}
+			
+			bullet.kill();
+			bullets.remove(bullet, true);
 		}
 		
 		private function itemCollision(a:FlxObject, b:FlxObject) : void

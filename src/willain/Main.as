@@ -12,7 +12,7 @@ package willain
 	{
 		public function Main() : void 
 		{
-			super(640, 480, PlayState);
+			super(640, 480, PlayState, 1, 60);
 		}
 	}
 	

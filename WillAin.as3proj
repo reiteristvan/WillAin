@@ -67,6 +67,8 @@
   <!-- Assets to embed into the output SWF -->
   <library>
     <asset path="src\willain\assets\pickleTile.png" />
+    <asset path="src\willain\assets\ladder.png" />
+    <asset path="src\willain\assets\bullet.png" />
   </library>
   <!-- Class files to compile (other referenced classes will automatically be included) -->
   <compileTargets>

@@ -8,11 +8,13 @@ package willain
 	 */
 	public class Ladder extends FlxSprite 
 	{
+		[Embed(source="assets/ladder.png")]
+		static public const Graphic:Class;
+		
 		public function Ladder(x:Number, y:Number, graphic:Class = null) : void 
 		{
-			super(x, y, graphic);
+			super(x, y, Ladder.Graphic);
 			
-			makeGraphic(32, 32, 0xFF00FF00);
 			velocity.x = velocity.y = 0;
 			acceleration.x = acceleration.y = 0;
 			drag.x = drag.y = 0;
